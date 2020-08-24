@@ -1,9 +1,9 @@
 #include <iostream>
 #include <algorithm>
 using namespace std;
-const int maxn = 105;
-int triangle[maxn][maxn];
-int dp[maxn];
+const int maxlen = 105;
+int triangle[maxlen][maxlen];
+int dp[maxlen];
 int main() {
     int n;
     cin >> n;
