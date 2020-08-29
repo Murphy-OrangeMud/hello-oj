@@ -3,9 +3,11 @@
 #include <cmath>
 using namespace std;
 const int maxn = 100005;
+const int offset = maxn * 100;
 int sum[maxn];
-int dp[maxn];
 int a[maxn];
+int p[2*offset + 10];
+int res[maxn];
 bool perfect(int x) {
     if ((int)sqrt(x) == sqrt(x)) return true;
     return false;
@@ -14,17 +16,19 @@ void solve() {
     int n;
     cin >> n;
     memset(sum, 0, sizeof(sum));
-    memset(dp, 0, sizeof(dp));
+    memset(p, 0, sizeof(p));
     memset(a, 0, sizeof(a));
+    memset(res, 0, sizeof(res));
     int cnt = 0;
+    p[offset]++;
     for (int i = 1; i <= n; i++) {
         cin >> a[i];
         sum[i] = sum[i-1] + a[i];
-    }
-    for (int i = 1; i <= n; i++) {
-        for (int j = 0; j < i; j++) {
-            if (perfect(sum[i] - sum[j])) ++cnt;
+        for (int j = 0; j <= sqrt(offset); j++) {
+            res[i] += p[sum[i] - j*j + offset];
         }
+        p[sum[i] + offset]++;
+        cnt += res[i];
     }
     cout << cnt << endl;
 }
