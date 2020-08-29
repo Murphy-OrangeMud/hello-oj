@@ -1,9 +1,11 @@
+// 看了题解。类似于后缀数组的办法。
+// WA: 没有开long long
 #include <iostream>
 #include <cstring>
 #include <cmath>
 using namespace std;
 const int maxn = 100005;
-const int offset = maxn * 100;
+const int offset = maxn * 101;
 int sum[maxn];
 int a[maxn];
 int p[2*offset + 10];
@@ -19,7 +21,7 @@ void solve() {
     memset(p, 0, sizeof(p));
     memset(a, 0, sizeof(a));
     memset(res, 0, sizeof(res));
-    int cnt = 0;
+    long long cnt = 0;
     p[offset]++;
     for (int i = 1; i <= n; i++) {
         cin >> a[i];
