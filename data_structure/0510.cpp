@@ -2,8 +2,8 @@
 #include <vector>
 using namespace std;
 struct node {
-    int val;
     node *l, *r;
+    int val;
     node(int _val = -1, node *_l = NULL, node *_r = NULL): val(_val), l(_l), r(_r) {}
 };
 vector<int> mid;
@@ -27,8 +27,13 @@ node *build(int midl, int midr, int backl, int backr) {
     node *r = build(mididx + 1, midr, backl + mididx - midl, backr - 1);
     return new node(backroot, l, r);
 }
+void del(node *cur) {
+    if (cur->l) del(cur->l);
+    if (cur->r) del(cur->r);
+    delete cur;
+}
 void prevtraverse(node *cur) {
-    cout << " " << cur->val;
+    printf(" %d", cur->val);
     if (cur->l) prevtraverse(cur->l);
     if (cur->r) prevtraverse(cur->r);
 }
@@ -36,19 +41,20 @@ int main() {
     int v;
     char c;
     while ((c = cin.peek()) != '\n') {
-        cin >> v;
+        scanf("%d", &v);
         mid.push_back(v);
     }
     char n = getchar();
     c = ' ';
     while ((c = cin.peek()) != '\n') {
-        cin >> v;
+        scanf("%d", &v);
         back.push_back(v);
     }
     node *cur = build(0, mid.size() - 1, 0, back.size() - 1);
-    cout << cur->val;
+    printf("%d", cur->val);
     prevtraverse(cur->l);
     prevtraverse(cur->r);
-    cout << endl;
+    printf("\n");
+    del(cur);
     return 0;
 }
