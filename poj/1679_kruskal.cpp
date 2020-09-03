@@ -1,3 +1,4 @@
+//WA: 还没找到原因在哪
 #include <iostream>
 #include <queue>
 #include <vector>
@@ -27,9 +28,6 @@ int getroot(int a) {
 void kruskal() {
     vector<e> ans;
     priority_queue<e> pq;
-    for (int i = 0; i < maxn; i++) {
-        parent[i] = i;
-    }
     for (int i = 0; i < edges.size(); i++) {
         pq.push(edges[i]);
     }
@@ -68,7 +66,7 @@ int main() {
     int t;
     cin >> t;
     for (int i = 0; i < maxn; i++) {
-
+        parent[i] = i;
     }
     for (int i = 0; i < t; i++) {
         edges.clear();
