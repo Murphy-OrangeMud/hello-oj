@@ -14,12 +14,10 @@ struct v {
     v() {
         color = -1;
     }
-    v(int _num): num(_num){
-        color = -1;
-    }
 }vertices[maxn];
 int cnt = 1;
 stack<int> stk;
+int inpath[maxn];
 int n, m;
 int idx = 0;
 int visited[maxn];
@@ -27,6 +25,7 @@ void tarjan(int u) {
     vertices[u].dfn = ++idx;
     vertices[u].low = idx;
     visited[u] = 1;
+    inpath[u] = 1;
     stk.push(u);
     for (int i = 0; i < vertices[u].out.size(); i++) {
         int v = vertices[u].out[i];
@@ -34,20 +33,23 @@ void tarjan(int u) {
             tarjan(v);
             vertices[u].low = min(vertices[u].low, vertices[v].low);
         } else {
-            if (vertices[v].color == -1) {
+            if (inpath[v]) {
                 vertices[u].low = min(vertices[u].low, vertices[v].dfn);
             }
         }
     }
     if (vertices[u].dfn == vertices[u].low) {
-        int cur = stk.top();
-        while (!stk.empty() && cur != u) {
+        while (!stk.empty() && stk.top() != u) {
+            vertices[stk.top()].color = cnt;
+            inpath[stk.top()] = 0;
             stk.pop();
-            vertices[cur].color = cnt;
-            cur = stk.top();
         }
-        stk.pop();
-        vertices[cur].color = cnt++;
+        if (!stk.empty()) {
+            vertices[stk.top()].color = cnt;
+            inpath[stk.top()] = 0;
+            stk.pop();
+        }
+        cnt++;
     }
 }
 struct p {
@@ -63,9 +65,11 @@ void toposort() {
         }
     }
     int cur;
+    int out = 0;
     while (!q.empty()) {
         cur = q.front();
         q.pop();
+        if (points[cur].out.size() == 0) ++out;
         for (int i = 0; i < points[cur].out.size(); i++) {
             points[points[cur].out[i]].indeg--;
             if (points[points[cur].out[i]].indeg == 0) {
@@ -73,7 +77,8 @@ void toposort() {
             }
         }
     }
-    cout << points[cur].vertices.size() << endl;
+    if (out > 1) cout << 0 << endl;
+    else cout << points[cur].vertices.size() << endl;
 }
 int main() {
     cin >> n >> m;
@@ -85,7 +90,16 @@ int main() {
         cin >> a >> b;
         vertices[a].out.push_back(b);
     }
-    tarjan(1);
+    for (int i = 1; i <= n; i++) {
+        if (!visited[i]) tarjan(i);
+    }
+    if (!stk.empty()) {
+        while (!stk.empty()) {
+            vertices[stk.top()].color = cnt;
+            stk.pop();
+        }
+        cnt++;
+    }
     for (int i = 1; i <= n; i++) {
         points[vertices[i].color].vertices.push_back(i);
         for (int j = 0; j < vertices[i].out.size(); j++) {
@@ -104,4 +118,5 @@ int main() {
         }
     }
     toposort();
+    return 0;
 }
