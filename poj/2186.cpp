@@ -25,7 +25,7 @@ int idx = 0;
 int visited[maxn];
 void tarjan(int u) {
     vertices[u].dfn = ++idx;
-    vertices[u].low = ++idx;
+    vertices[u].low = idx;
     visited[u] = 1;
     stk.push(u);
     for (int i = 0; i < vertices[u].out.size(); i++) {
@@ -89,15 +89,16 @@ int main() {
     for (int i = 1; i <= n; i++) {
         points[vertices[i].color].vertices.push_back(i);
         for (int j = 0; j < vertices[i].out.size(); j++) {
+            if (vertices[vertices[i].out[j]].color == vertices[i].color) continue;
             bool flag = false;
             for (int k = 0; k < points[vertices[i].color].out.size(); k++) {
-                if (points[vertices[i].color].out[k] == vertices[i].out[j]) {
+                if (points[vertices[i].color].out[k] == vertices[vertices[i].out[j]].color) {
                     flag = true;
                     break;
                 }
             }
             if (!flag) {
-                points[vertices[i].color].out.push_back(vertices[i].out[j]);
+                points[vertices[i].color].out.push_back(vertices[vertices[i].out[j]].color);
                 points[vertices[vertices[i].out[j]].color].indeg++;
             }
         }
