@@ -9,6 +9,7 @@ struct pair {
         , second(_s)
     {
     }
+    pair() { }
 };
 
 template <class Key, class Value, int MAX>
@@ -34,11 +35,9 @@ public:
 
 template <class Key, class Value, int MaxDegree>
 class BTree {
-public:
     BNode<Key, Value, MaxDegree>* root;
 
-private:
-    BNode<Key, Value, MaxDegree> search(Key key,
+    BNode<Key, Value, MaxDegree>* search(Key key,
         BNode<Key, Value, MaxDegree>* current)
     {
         if (current == NULL) {
@@ -53,6 +52,7 @@ private:
         }
         return search(key, current->sons[current->currentKey]);
     }
+
     void insertAndSplit(pair<Key, Value> val,
         BNode<Key, Value, MaxDegree>* node,
         BNode<Key, Value, MaxDegree>* current)
@@ -60,7 +60,7 @@ private:
         for (int i = 0; i < current->currentKey; i++) {
             if (val.first < current->keys[i].first || i == current->currentKey - 1) {
                 if (current->currentKey < MaxDegree) {
-                    if (key < current->keys[i].first) {
+                    if (val.first < current->keys[i].first) {
                         for (int j = current->currentKey - 1; j >= i; j--) {
                             current->keys[j + 1] = current->keys[j];
                         }
@@ -79,8 +79,8 @@ private:
                     // insert the value and find the value to be up
                     // 策略：总是提升右节点，也就是提升的节点总是在提升的key的右边一个
                     pair<Key, Value> tmp = current->keys[MaxDegree / 2];
-                    BNode<Key, Value, MaxDegree> thisNode = new BNode<Key, Value, MaxDegree>();
-                    BNode<Key, Value, MaxDegree> newNode = new BNode<Key, Value, MaxDegree>();
+                    BNode<Key, Value, MaxDegree>* thisNode = new BNode<Key, Value, MaxDegree>();
+                    BNode<Key, Value, MaxDegree>* newNode = new BNode<Key, Value, MaxDegree>();
                     for (int j = 0; j < MaxDegree / 2; j++) {
                         thisNode->keys[j] = current->keys[j];
                     }
@@ -90,7 +90,7 @@ private:
                     if (i < MaxDegree / 2) {
                         // 把key和node插入thisNode
                         for (int j = 0; j < MaxDegree / 2; j++) {
-                            if (thisNode->keys[j] > val.first) {
+                            if (thisNode->keys[j].first > val.first) {
                                 for (int l = MaxDegree / 2 - 1; l >= j; l--) {
                                     thisNode->keys[l + 1] = thisNode->keys[l];
                                 }
@@ -104,7 +104,7 @@ private:
                                 thisNode->sons[j + 1] = node;
                             }
                         }
-                        if (thisNode->keys[MaxDegree / 2 - 1] < val.first) {
+                        if (thisNode->keys[MaxDegree / 2 - 1].first < val.first) {
                             thisNode->keys[MaxDegree / 2] = val;
                             thisNode->sons[MaxDegree / 2 + 1] = node;
                         }
@@ -113,7 +113,7 @@ private:
                         }
                     } else {
                         for (int j = MaxDegree / 2 + 1; j < MaxDegree; j++) {
-                            if (newNode->keys[j - MaxDegree / 2 - 1] > val.first) {
+                            if (newNode->keys[j - MaxDegree / 2 - 1].first > val.first) {
                                 for (int l = MaxDegree - 1; l >= j; l--) {
                                     newNode->keys[l - MaxDegree / 2] = newNode->keys[l - MaxDegree / 2 - 1];
                                 }
@@ -127,7 +127,7 @@ private:
                                 newNode->sons[j - MaxDegree / 2] = node;
                             }
                         }
-                        if (newNode->keys[MaxDegree - 1 - MaxDegree / 2] < key) {
+                        if (newNode->keys[MaxDegree - 1 - MaxDegree / 2].first < val.first) {
                             newNode->keys[MaxDegree - MaxDegree / 2] = val;
                             newNode->sons[MaxDegree + 1 - MaxDegree / 2] = node;
                         }
@@ -186,13 +186,20 @@ private:
                         nodeMerge->sons[node->currentKey + current->sons[i + 1]->currentKey + 1] = current->sons[i + 1]->sons[current->sons[i + 1]->currentKey];
                         // delete
                         current->sons[i] = nodeMerge;
-                        current->keys[i] = NULL;
+                        current->keys[i] = pair<Key, Value>();
                         for (int j = i; j < current->currentKey - 1; j++) {
                             current->keys[j] = current->keys[j + 1];
                             current->sons[j + 1] = current->sons[j + 2];
                         }
                         current->currentKey--;
-                        merge(current, current->parent);
+                        if (current->parent)
+                            merge(current, current->parent);
+                        else {
+                            if (current->currentKey < 1) {
+                                root = current->sons[0];
+                                delete current;
+                            }
+                        }
                     }
                 } else {
                     if (current->sons[i - 1]->currentKey > MaxDegree / 2) {
@@ -202,10 +209,10 @@ private:
                             node->keys[j + 1] = node->keys[j];
                             node->sons[j + 1] = node->sons[j];
                         }
-                        node->keys[0] = current->sons[i - 1]->keys[current->sons[i - 1]->currentKeys - 1];
-                        current->sons[i - 1]->keys[current->sons[i - 1]->currentKeys - 1] = NULL;
-                        node->sons[0] = current->sons[i - 1]->sons[current->sons[i - 1]->currentKeys];
-                        current->sons[i - 1]->sons[current->sons[i - 1]->currentKeys] = NULL;
+                        node->keys[0] = current->sons[i - 1]->keys[current->sons[i - 1]->currentKey - 1];
+                        current->sons[i - 1]->keys[current->sons[i - 1]->currentKey - 1] = pair<Key, Value>();
+                        node->sons[0] = current->sons[i - 1]->sons[current->sons[i - 1]->currentKey];
+                        current->sons[i - 1]->sons[current->sons[i - 1]->currentKey] = NULL;
                         current->sons[i - 1]->currentKey--;
                         node->currentKey++;
                     } else {
@@ -226,13 +233,20 @@ private:
                         nodeMerge->sons[node->currentKey + current->sons[i + 1]->currentKey + 1] = node->sons[node->currentKey];
                         // delete
                         current->sons[i] = nodeMerge;
-                        current->keys[i] = NULL;
+                        current->keys[i] = pair<Key, Value>();
                         for (int j = i; j < current->currentKey - 1; j++) {
                             current->keys[j] = current->keys[j + 1];
                             current->sons[j + 1] = current->sons[j + 2];
                         }
                         current->currentKey--;
-                        merge(current, current->parent);
+                        if (current->parent)
+                            merge(current, current->parent);
+                        else {
+                            if (current->currentKey < 1) {
+                                root = current->sons[0];
+                                delete current;
+                            }
+                        }
                     }
                 }
             }
@@ -265,6 +279,7 @@ private:
                 }
             }
         }
+        return false;
     }
 
     bool del(Key key, BNode<Key, Value, MaxDegree>* current)
@@ -297,7 +312,7 @@ private:
                     }
                     for (int j = 0; j < tmp->currentKey; j++) {
                         if (tmp->keys[j].first > key) {
-                            pair<Key, Value> tmpVal = tmp->keys[ji];
+                            pair<Key, Value> tmpVal = tmp->keys[j];
                             tmp->keys[j] = current->keys[i];
                             current->keys[i] = tmpVal;
                             break;
@@ -307,12 +322,31 @@ private:
                 }
             }
         }
+        return false;
+    }
+
+    void recursivePrint(BNode<Key, Value, MaxDegree>* current, int depth)
+    {
+        if (current == NULL)
+            return;
+        std::cout << "depth: " << depth << std::endl;
+        for (int i = 0; i < current->currentKey; i++) {
+            std::cout << current->keys[i].first << " ";
+        }
+        for (int i = 0; i <= current->currentKey; i++) {
+            recursivePrint(current->sons[i], depth + 1);
+        }
     }
 
 public:
+    BTree<Key, Value, MaxDegree>()
+    {
+        root = new BNode<Key, Value, MaxDegree>();
+    }
+
     Value Search(Key key)
     {
-        Bnode<Key, Value, MaxDegree>* node = search(key, root);
+        BNode<Key, Value, MaxDegree>* node = search(key, root);
         if (node == NULL) {
             std::cout << "No such key in this tree\n";
             return NULL;
@@ -322,6 +356,7 @@ public:
                 return node->keys[i].second;
             }
         }
+        return NULL;
     }
 
     bool Insert(Key key, Value value)
@@ -344,5 +379,10 @@ public:
             del(key, current);
             return true;
         }
+    }
+
+    void PrintTree()
+    {
+        recursivePrint(root, 0);
     }
 };
